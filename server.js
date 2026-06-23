@@ -15,10 +15,27 @@ const octokit = new Octokit({
 });
 
 // Approved GitHub repositories
+// The projectKey is what your Custom GPT will use.
+// The repo value must match the actual GitHub repository name.
 const PROJECTS = {
   "raliegh-ai-control-center": {
     owner: process.env.GITHUB_OWNER || "raliegh2",
     repo: "raliegh-ai-control-center",
+  },
+
+  "raliegh-cybersecurity-portfolio": {
+    owner: process.env.GITHUB_OWNER || "raliegh2",
+    repo: "raliegh-cybersecurity-portfolio",
+  },
+
+  "teachplan-studio": {
+    owner: process.env.GITHUB_OWNER || "raliegh2",
+    repo: "teachplan-studio",
+  },
+
+  "demoralieghrepair": {
+    owner: process.env.GITHUB_OWNER || "raliegh2",
+    repo: "demoralieghrepair",
   },
 };
 
