@@ -1,0 +1,101 @@
+openapi: 3.1.0
+info:
+  title: GPT Codex Bridge
+  version: 1.0.0
+  description: Allows a Custom GPT to create GitHub issues and Codex-ready briefs.
+servers:
+  - url: https://YOUR-DEPLOYED-BRIDGE-URL.com
+paths:
+  /health:
+    get:
+      operationId: checkBridgeHealth
+      summary: Check whether the bridge is running
+      responses:
+        "200":
+          description: Bridge is running
+  /projects:
+    get:
+      operationId: listProjects
+      summary: List approved project keys
+      responses:
+        "200":
+          description: Approved project keys
+  /create-task:
+    post:
+      operationId: createCodexTask
+      summary: Create a Codex task as a GitHub issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                projectKey:
+                  type: string
+                  description: Approved project key, such as church-visitor-app
+                title:
+                  type: string
+                body:
+                  type: string
+                priority:
+                  type: string
+                  enum:
+                    - low
+                    - medium
+                    - high
+              required:
+                - projectKey
+                - title
+                - body
+      responses:
+        "200":
+          description: Task created successfully
+  /create-codex-brief:
+    post:
+      operationId: createCodexBrief
+      summary: Create a structured Codex implementation brief as a GitHub issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                projectKey:
+                  type: string
+                featureName:
+                  type: string
+                objective:
+                  type: string
+                requirements:
+                  type: array
+                  items:
+                    type: string
+                acceptanceCriteria:
+                  type: array
+                  items:
+                    type: string
+                securityRequirements:
+                  type: array
+                  items:
+                    type: string
+                testingInstructions:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - projectKey
+                - featureName
+                - objective
+      responses:
+        "200":
+          description: Codex brief created successfully
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+security:
+  - ApiKeyAuth: []

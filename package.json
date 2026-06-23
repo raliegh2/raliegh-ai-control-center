@@ -1,0 +1,16 @@
+{
+  "name": "gpt-codex-bridge",
+  "version": "1.0.0",
+  "description": "A reusable bridge that lets a Custom GPT create GitHub tasks for Codex.",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@octokit/rest": "latest",
+    "dotenv": "latest",
+    "express": "latest"
+  }
+}
