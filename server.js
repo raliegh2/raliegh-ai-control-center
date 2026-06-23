@@ -19,21 +19,12 @@ const octokit = new Octokit({
 
 // Approved GitHub repositories.
 // Add your own project repositories here.
-const projects = {
-  "church-visitor-app": {
-    owner: "raliegh2",
-    repo: "church-visitor-app",
-  },
-  "portfolio-site": {
-    owner: "raliegh2",
-    repo: "portfolio-site",
-  },
-  "inventory-app": {
-    owner: "raliegh2",
-    repo: "inventory-app",
-  },
+const PROJECTS = {
+  "raliegh-ai-control-center": {
+    owner: process.env.GITHUB_OWNER || "raliegh2",
+    repo: "raliegh-ai-control-center"
+  }
 };
-
 function requireApiKey(req, res, next) {
   if (!API_KEY) return next();
 
