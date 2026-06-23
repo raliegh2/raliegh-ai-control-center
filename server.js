@@ -2,9 +2,6 @@ import express from "express";
 import dotenv from "dotenv";
 import { Octokit } from "@octokit/rest";
 
-// Load environment variables from .env
-// Required: GITHUB_TOKEN
-// Optional: PORT, API_KEY
 dotenv.config();
 
 const app = express();
@@ -17,14 +14,14 @@ const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 });
 
-// Approved GitHub repositories.
-// Add your own project repositories here.
+// Approved GitHub repositories
 const PROJECTS = {
   "raliegh-ai-control-center": {
     owner: process.env.GITHUB_OWNER || "raliegh2",
-    repo: "raliegh-ai-control-center"
-  }
+    repo: "raliegh-ai-control-center",
+  },
 };
+
 function requireApiKey(req, res, next) {
   if (!API_KEY) return next();
 
@@ -40,6 +37,14 @@ function requireApiKey(req, res, next) {
   next();
 }
 
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "GPT-Codex Bridge is running.",
+    endpoints: ["/health", "/projects", "/create-task", "/create-codex-brief"],
+  });
+});
+
 app.get("/health", (req, res) => {
   res.json({
     success: true,
@@ -50,7 +55,7 @@ app.get("/health", (req, res) => {
 app.get("/projects", requireApiKey, (req, res) => {
   res.json({
     success: true,
-    projects: Object.keys(projects),
+    projects: Object.keys(PROJECTS),
   });
 });
 
@@ -65,7 +70,7 @@ app.post("/create-task", requireApiKey, async (req, res) => {
       });
     }
 
-    const project = projects[projectKey];
+    const project = PROJECTS[projectKey];
 
     if (!project) {
       return res.status(404).json({
@@ -95,6 +100,7 @@ app.post("/create-task", requireApiKey, async (req, res) => {
     });
   } catch (error) {
     console.error(error);
+
     res.status(500).json({
       success: false,
       error: error.message,
@@ -104,7 +110,15 @@ app.post("/create-task", requireApiKey, async (req, res) => {
 
 app.post("/create-codex-brief", requireApiKey, async (req, res) => {
   try {
-    const { projectKey, featureName, objective, requirements, acceptanceCriteria, securityRequirements, testingInstructions } = req.body;
+    const {
+      projectKey,
+      featureName,
+      objective,
+      requirements = [],
+      acceptanceCriteria = [],
+      securityRequirements = [],
+      testingInstructions = [],
+    } = req.body;
 
     if (!projectKey || !featureName || !objective) {
       return res.status(400).json({
@@ -113,7 +127,7 @@ app.post("/create-codex-brief", requireApiKey, async (req, res) => {
       });
     }
 
-    const project = projects[projectKey];
+    const project = PROJECTS[projectKey];
 
     if (!project) {
       return res.status(404).json({
@@ -122,7 +136,22 @@ app.post("/create-codex-brief", requireApiKey, async (req, res) => {
       });
     }
 
-    const body = `## Objective\n${objective}\n\n## Requirements\n${(requirements || []).map((item) => `- ${item}`).join("\n")}\n\n## Acceptance Criteria\n${(acceptanceCriteria || []).map((item) => `- ${item}`).join("\n")}\n\n## Security Requirements\n${(securityRequirements || []).map((item) => `- ${item}`).join("\n")}\n\n## Testing Instructions\n${(testingInstructions || []).map((item) => `- ${item}`).join("\n")}\n`;
+    const body = `
+## Objective
+${objective}
+
+## Requirements
+${requirements.map((item) => `- ${item}`).join("\n")}
+
+## Acceptance Criteria
+${acceptanceCriteria.map((item) => `- ${item}`).join("\n")}
+
+## Security Requirements
+${securityRequirements.map((item) => `- ${item}`).join("\n")}
+
+## Testing Instructions
+${testingInstructions.map((item) => `- ${item}`).join("\n")}
+`;
 
     const issue = await octokit.issues.create({
       owner: project.owner,
@@ -139,6 +168,7 @@ app.post("/create-codex-brief", requireApiKey, async (req, res) => {
     });
   } catch (error) {
     console.error(error);
+
     res.status(500).json({
       success: false,
       error: error.message,
