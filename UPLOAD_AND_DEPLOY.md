@@ -42,7 +42,7 @@ Set these environment variables in Render:
 - `API_KEY`
 - `GITHUB_OWNER=raliegh2`
 - `PREVIEW_AUTH_SECRET`
-- `PUBLIC_BASE_URL=https://<your-service>.onrender.com`
+- `PUBLIC_BASE_URL=https://raliegh-ai-control-center.onrender.com`
 - `WORKSPACE_ROOT=/tmp/raliegh-ai-workspaces`
 - `WORKSPACE_TTL_MINUTES=60`
 - `PREVIEW_TTL_MINUTES=30`
