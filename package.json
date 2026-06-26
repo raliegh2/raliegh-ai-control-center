@@ -1,16 +1,23 @@
 {
   "name": "gpt-codex-bridge",
-  "version": "1.0.0",
-  "description": "A reusable bridge that lets a Custom GPT create GitHub tasks for Codex.",
+  "version": "2.0.0",
+  "description": "A controlled bridge that lets a Custom GPT manage approved repository workspaces and previews.",
   "main": "server.js",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node --watch server.js",
+    "check": "node --check server.js"
   },
   "dependencies": {
-    "@octokit/rest": "latest",
-    "dotenv": "latest",
-    "express": "latest"
+    "@octokit/rest": "^21.1.1",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "http-proxy": "^1.18.1",
+    "playwright": "1.52.0"
   }
 }

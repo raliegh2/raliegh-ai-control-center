@@ -1,25 +1,49 @@
 openapi: 3.1.0
 info:
-  title: GPT Codex Bridge
-  version: 1.0.0
-  description: Allows a Custom GPT to create GitHub issues and Codex-ready briefs.
+  title: Raliegh AI Control Center
+  version: 2.0.0
+  description: >
+    Creates Codex issues and manages temporary, approved repository workspaces.
+    File edits replace complete files; arbitrary shell commands are not accepted.
 servers:
-  - url: https://YOUR-DEPLOYED-BRIDGE-URL.com
+  - url: https://YOUR-BRIDGE-SERVICE.onrender.com
+
+security:
+  - ApiKeyAuth: []
+
 paths:
   /health:
     get:
       operationId: checkBridgeHealth
       summary: Check whether the bridge is running
+      security: []
       responses:
         "200":
-          description: Bridge is running
+          description: Bridge health
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicResponse"
+
   /projects:
     get:
       operationId: listProjects
       summary: List approved project keys
       responses:
         "200":
-          description: Approved project keys
+          description: Approved projects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  projects:
+                    type: array
+                    items:
+                      type: string
+
   /create-task:
     post:
       operationId: createCodexTask
@@ -30,27 +54,26 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: false
+              required: [projectKey, title, body]
               properties:
                 projectKey:
-                  type: string
-                  description: Approved project key, such as church-visitor-app
+                  $ref: "#/components/schemas/ProjectKey"
                 title:
                   type: string
                 body:
                   type: string
                 priority:
                   type: string
-                  enum:
-                    - low
-                    - medium
-                    - high
-              required:
-                - projectKey
-                - title
-                - body
+                  enum: [low, medium, high]
       responses:
         "200":
-          description: Task created successfully
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueResponse"
+
   /create-codex-brief:
     post:
       operationId: createCodexBrief
@@ -61,41 +84,469 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: false
+              required: [projectKey, featureName, objective]
               properties:
                 projectKey:
-                  type: string
+                  $ref: "#/components/schemas/ProjectKey"
                 featureName:
                   type: string
                 objective:
                   type: string
                 requirements:
                   type: array
-                  items:
-                    type: string
+                  items: { type: string }
                 acceptanceCriteria:
                   type: array
-                  items:
-                    type: string
+                  items: { type: string }
                 securityRequirements:
                   type: array
-                  items:
-                    type: string
+                  items: { type: string }
                 testingInstructions:
                   type: array
-                  items:
-                    type: string
-              required:
-                - projectKey
-                - featureName
-                - objective
+                  items: { type: string }
       responses:
         "200":
-          description: Codex brief created successfully
+          description: Brief created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssueResponse"
+
+  /workspaces:
+    post:
+      operationId: createWorkspace
+      summary: Create a temporary workspace for an approved repository
+      description: >
+        Starts repository cloning and branch creation in the background.
+        Poll getWorkspaceStatus until status is ready or failed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [projectKey]
+              properties:
+                projectKey:
+                  $ref: "#/components/schemas/ProjectKey"
+                branchPrefix:
+                  type: string
+                  maxLength: 30
+                  default: ai-workspace
+      responses:
+        "202":
+          description: Workspace creation started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceCreation"
+
+  /workspaces/{workspaceId}:
+    get:
+      operationId: getWorkspaceStatus
+      summary: Get workspace status
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "200":
+          description: Workspace status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  workspace:
+                    $ref: "#/components/schemas/Workspace"
+    delete:
+      operationId: cleanupWorkspace
+      summary: Stop the preview and permanently delete a temporary workspace
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "200":
+          description: Workspace deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicResponse"
+
+  /workspaces/{workspaceId}/files:
+    get:
+      operationId: listWorkspaceFiles
+      summary: List files inside a workspace
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+        - name: maxDepth
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10
+            default: 6
+      responses:
+        "200":
+          description: Workspace file list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  files:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        path: { type: string }
+                        type:
+                          type: string
+                          enum: [file, directory]
+                        size: { type: integer }
+
+  /workspaces/{workspaceId}/file:
+    get:
+      operationId: readWorkspaceFile
+      summary: Read one UTF-8 text file inside a workspace
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+        - name: path
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: File content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  path: { type: string }
+                  content: { type: string }
+
+  /workspaces/{workspaceId}/patch:
+    post:
+      operationId: applyWorkspacePatch
+      summary: Replace the complete content of one or more workspace files
+      description: >
+        This operation accepts full replacement content, not a raw shell or
+        arbitrary command. Paths are restricted to the selected repository.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [changes]
+              properties:
+                changes:
+                  type: array
+                  minItems: 1
+                  maxItems: 20
+                  items:
+                    type: object
+                    additionalProperties: false
+                    required: [path, content]
+                    properties:
+                      path:
+                        type: string
+                      content:
+                        type: string
+      responses:
+        "200":
+          description: Files updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  changedPaths:
+                    type: array
+                    items: { type: string }
+
+  /workspaces/{workspaceId}/scripts:
+    post:
+      operationId: runProjectScript
+      summary: Start an approved package-manager script as a background job
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [script]
+              properties:
+                script:
+                  type: string
+                  enum: [install, lint, test, build, typecheck, check]
+      responses:
+        "202":
+          description: Job started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobStart"
+
+  /jobs/{jobId}:
+    get:
+      operationId: getJobStatus
+      summary: Get status and bounded logs for a background job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Job status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  job:
+                    $ref: "#/components/schemas/Job"
+
+  /workspaces/{workspaceId}/diff:
+    get:
+      operationId: getGitDiff
+      summary: Get the current uncommitted Git diff
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "200":
+          description: Git diff
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  diff: { type: string }
+                  stderr: { type: string }
+
+  /workspaces/{workspaceId}/preview:
+    post:
+      operationId: startPreview
+      summary: Start the repository development server
+      description: >
+        Dependencies must be installed first with runProjectScript using the
+        install script. Poll getPreviewStatus until running or failed.
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "202":
+          description: Preview starting
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  status: { type: string }
+                  previewUrl: { type: string }
+                  expiresAt:
+                    type: string
+                    format: date-time
+    get:
+      operationId: getPreviewStatus
+      summary: Get preview status and temporary URL
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "200":
+          description: Preview status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  preview:
+                    type: object
+                    additionalProperties: true
+    delete:
+      operationId: stopPreview
+      summary: Stop a running preview server
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "200":
+          description: Preview stopped
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicResponse"
+
+  /workspaces/{workspaceId}/preview/logs:
+    get:
+      operationId: getPreviewLogs
+      summary: Get bounded stdout and stderr from the preview
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      responses:
+        "200":
+          description: Preview logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  status: { type: string }
+                  stdout: { type: string }
+                  stderr: { type: string }
+
+  /workspaces/{workspaceId}/screenshots:
+    post:
+      operationId: capturePreviewScreenshot
+      summary: Capture a screenshot from the running preview
+      parameters:
+        - $ref: "#/components/parameters/WorkspaceId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                path:
+                  type: string
+                  default: /
+                viewport:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    width:
+                      type: integer
+                      minimum: 320
+                      maximum: 2000
+                      default: 1440
+                    height:
+                      type: integer
+                      minimum: 480
+                      maximum: 3000
+                      default: 1000
+      responses:
+        "200":
+          description: Screenshot captured
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  filename: { type: string }
+                  screenshotUrl: { type: string }
+                  viewport:
+                    type: object
+                    properties:
+                      width: { type: integer }
+                      height: { type: integer }
+
 components:
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
       in: header
       name: x-api-key
-security:
-  - ApiKeyAuth: []
+
+  parameters:
+    WorkspaceId:
+      name: workspaceId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Workspace identifier returned by createWorkspace
+
+  schemas:
+    ProjectKey:
+      type: string
+      enum:
+        - raliegh-ai-control-center
+        - raliegh-cybersecurity-portfolio
+        - teachplan-studio
+        - demoralieghrepair
+
+    BasicResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+        status: { type: string }
+
+    IssueResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        issueUrl: { type: string }
+        issueNumber: { type: integer }
+
+    WorkspaceCreation:
+      type: object
+      properties:
+        success: { type: boolean }
+        workspaceId: { type: string }
+        projectKey: { type: string }
+        branch: { type: string }
+        status: { type: string }
+
+    Workspace:
+      type: object
+      properties:
+        workspaceId: { type: string }
+        projectKey: { type: string }
+        branch: { type: string }
+        status: { type: string }
+        error: { type: [string, "null"] }
+        createdAt:
+          type: string
+          format: date-time
+        lastActivityAt:
+          type: string
+          format: date-time
+        lastJobId:
+          type: [string, "null"]
+        previewStatus: { type: string }
+
+    JobStart:
+      type: object
+      properties:
+        success: { type: boolean }
+        jobId: { type: string }
+        status: { type: string }
+
+    Job:
+      type: object
+      additionalProperties: true
+      properties:
+        jobId: { type: string }
+        workspaceId: { type: string }
+        type: { type: string }
+        status: { type: string }
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: [string, "null"]
+        stdout: { type: string }
+        stderr: { type: string }
+        error:
+          type: [string, "null"]
