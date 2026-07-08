@@ -1,4 +1,4 @@
-# Repositories the agent should audit. Edit this list as your GitHub projects change.
+# Repositories are processed independently; one failure does not stop the others.
 repos:
   - raliegh2/teachplan-studio
   - raliegh2/visitorcounter
@@ -8,8 +8,5 @@ repos:
   - raliegh2/ralieghtech
 
 settings:
-  create_pull_requests: true
-  create_security_report_file: true
-  safe_auto_fix: true
   branch_prefix: security/audit-fixes
   report_dir: security-reports
