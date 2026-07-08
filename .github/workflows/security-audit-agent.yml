@@ -1,0 +1,75 @@
+name: Security Audit Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Run mode
+        required: true
+        default: report
+        type: choice
+        options:
+          - report
+          - fix
+      repos:
+        description: Comma-separated owner/repository overrides (blank uses repo_targets.yml)
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout control repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: agents/github-security-auditor/requirements.txt
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install audit tools
+        run: python -m pip install --disable-pip-version-check -r agents/github-security-auditor/requirements.txt
+
+      - name: Verify cross-repository token
+        env:
+          AUDIT_GITHUB_TOKEN: ${{ secrets.AUDIT_GITHUB_TOKEN }}
+        run: |
+          if [ -z "$AUDIT_GITHUB_TOKEN" ]; then
+            echo "Required secret AUDIT_GITHUB_TOKEN is not configured." >&2
+            exit 1
+          fi
+
+      - name: Configure Git identity
+        run: |
+          git config --global user.name "security-audit-agent"
+          git config --global user.email "security-audit-agent@users.noreply.github.com"
+
+      - name: Run security audit agent
+        env:
+          GH_TOKEN: ${{ secrets.AUDIT_GITHUB_TOKEN }}
+        run: >-
+          python agents/github-security-auditor/security_audit_agent.py
+          --config agents/github-security-auditor/repo_targets.yml
+          --mode "${{ inputs.mode }}"
+          --repos "${{ inputs.repos }}"
+
+      - name: Upload audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit-reports-${{ github.run_id }}
+          path: ${{ runner.temp }}/security-audit-agent/**/security-reports/*.md
+          if-no-files-found: warn
+          retention-days: 30

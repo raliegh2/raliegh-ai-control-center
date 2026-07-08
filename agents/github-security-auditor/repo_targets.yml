@@ -1,0 +1,12 @@
+# Repositories are processed independently; one failure does not stop the others.
+repos:
+  - raliegh2/teachplan-studio
+  - raliegh2/visitorcounter
+  - raliegh2/m5-bridge
+  - raliegh2/raliegh-cybersecurity-portfolio
+  - raliegh2/lesson_gen
+  - raliegh2/ralieghtech
+
+settings:
+  branch_prefix: security/audit-fixes
+  report_dir: security-reports
