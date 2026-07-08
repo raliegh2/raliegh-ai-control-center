@@ -1,0 +1,71 @@
+name: Security Audit Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Run mode: report or fix"
+        required: true
+        default: "fix"
+        type: choice
+        options:
+          - report
+          - fix
+      repos:
+        description: "Comma-separated repo list. Leave blank to use repo_targets.yml"
+        required: false
+        default: ""
+  schedule:
+    - cron: "0 9 * * 1"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  security-audit-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout control repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install security tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r agents/github-security-auditor/requirements.txt
+
+      - name: Configure git identity
+        run: |
+          git config --global user.name "security-audit-agent"
+          git config --global user.email "security-audit-agent@users.noreply.github.com"
+
+      - name: Run security audit agent
+        env:
+          GH_TOKEN: ${{ secrets.AUDIT_GITHUB_TOKEN || github.token }}
+          INPUT_REPOS: ${{ inputs.repos }}
+          INPUT_MODE: ${{ inputs.mode || 'fix' }}
+        run: |
+          python agents/github-security-auditor/security_audit_agent.py \
+            --config agents/github-security-auditor/repo_targets.yml \
+            --mode "$INPUT_MODE" \
+            --repos "$INPUT_REPOS"
+
+      - name: Upload audit workspace reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-audit-agent-reports
+          path: /tmp/security-audit-agent/**/*.md
+          if-no-files-found: ignore
