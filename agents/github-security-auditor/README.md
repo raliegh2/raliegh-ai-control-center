@@ -2,6 +2,8 @@
 
 The agent audits configured GitHub repositories and produces reviewable Markdown reports. In `fix` mode it can propose narrowly scoped hygiene and dependency-lock changes through pull requests; it never merges them.
 
+For the complete architecture, activation procedure, operating runbook, troubleshooting guide, and shutdown instructions, see [OPERATIONS.md](OPERATIONS.md).
+
 ## Checks and safe fixes
 
 Checks are selected by detected project type:
@@ -28,7 +30,7 @@ Use a fine-grained token scoped only to the target repositories. Report mode nee
 
 ## Run with GitHub Actions
 
-1. Open **Actions → Security Audit Agent → Run workflow**.
+1. Open **Actions > Security Audit Agent > Run workflow**.
 2. Select `report` for scans only or `fix` to create review PRs.
 3. Optionally enter a comma-separated override such as `raliegh2/visitorcounter,raliegh2/m5-bridge`. Leave it blank to use `repo_targets.yml`.
 4. Download the `security-audit-reports-*` artifact after the run.
