@@ -1,0 +1,81 @@
+{
+  "defaultProfile": "coding",
+  "globalLimits": {
+    "maxConcurrentModels": 1,
+    "maxParallelRequests": 1,
+    "defaultContextTokens": 1024,
+    "storageBudgetGb": 15,
+    "bindAddress": "127.0.0.1",
+    "minimumFreeRamGbBeforeRun": 4,
+    "minimumFreeDiskGbBeforePull": 5
+  },
+  "profiles": {
+    "coding": {
+      "model": "qwen2.5:3b",
+      "fallbackModel": "llama3.2:3b",
+      "temperature": 0.2,
+      "contextTokens": 1024,
+      "runtimeOptions": {
+        "num_ctx": 1024,
+        "num_predict": 256
+      },
+      "systemBoundary": "Help with coding, debugging, refactoring, Git, GitHub workflows, and explanations. Ask before editing files and provide diffs or backups before destructive changes."
+    },
+    "cybersecurity": {
+      "model": "qwen2.5:3b",
+      "fallbackModel": "llama3.2:3b",
+      "temperature": 0.2,
+      "contextTokens": 1024,
+      "runtimeOptions": {
+        "num_ctx": 1024,
+        "num_predict": 256
+      },
+      "systemBoundary": "Support defensive security, authorized labs, networking, log analysis, vulnerability assessment, incident response documentation, and secure coding. Refuse uncontrolled exploitation, persistence, credential theft, or unauthorized access."
+    },
+    "schoolwork": {
+      "model": "llama3.2:3b",
+      "fallbackModel": "llama3.2:1b",
+      "temperature": 0.3,
+      "contextTokens": 1024,
+      "runtimeOptions": {
+        "num_ctx": 1024,
+        "num_predict": 256
+      },
+      "systemBoundary": "Support BSc Computing study, note summarization, planning, explanations, and drafting. Cite local source files when retrieval is used."
+    },
+    "general": {
+      "model": "llama3.2:3b",
+      "fallbackModel": "llama3.2:1b",
+      "temperature": 0.4,
+      "contextTokens": 1024,
+      "runtimeOptions": {
+        "num_ctx": 1024,
+        "num_predict": 256
+      },
+      "systemBoundary": "Support general technical research, summaries, troubleshooting, and planning. Keep answers local-first and avoid uploading private content."
+    },
+    "tradingResearch": {
+      "model": "llama3.2:3b",
+      "fallbackModel": "llama3.2:1b",
+      "temperature": 0.2,
+      "contextTokens": 1024,
+      "runtimeOptions": {
+        "num_ctx": 1024,
+        "num_predict": 256
+      },
+      "systemBoundary": "Support educational trading research, backtest review, strategy notes, risk-control documentation, and supervised analysis. Do not place trades, connect broker APIs, or provide autonomous financial decisions."
+    },
+    "lowMemoryFallback": {
+      "model": "llama3.2:1b",
+      "fallbackModel": "qwen2.5-coder:1.5b",
+      "temperature": 0.2,
+      "contextTokens": 1024,
+      "runtimeOptions": {
+        "num_ctx": 1024,
+        "num_gpu": 0,
+        "num_predict": 256
+      },
+      "systemBoundary": "Use when free RAM or VRAM is low. Keep responses short, avoid large pasted context, and ask the user to free memory before larger coding or retrieval tasks."
+    }
+  }
+}
