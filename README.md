@@ -95,3 +95,14 @@ When I ask to build or modify an app:
 5. Prioritize authentication, data protection, input validation, and role-based access.
 6. After Codex completes a task, review the changes and create follow-up tasks if needed.
 ```
+
+## Offline AI assistant planning
+
+Issue-driven planning for a lightweight secondary Ollama assistant lives in:
+
+- `OFFLINE_AI_ARCHITECTURE.md`
+- `OFFLINE_AI_SETUP.md`
+- `OFFLINE_AI_BENCHMARKS.md`
+- `OFFLINE_AI_OPERATOR_GUIDE.md`
+- `offline-ai/`
+- `scripts/Test-OfflineAIReadiness.ps1`
