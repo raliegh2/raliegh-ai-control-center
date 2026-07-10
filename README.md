@@ -105,4 +105,6 @@ Issue-driven planning for a lightweight secondary Ollama assistant lives in:
 - `OFFLINE_AI_BENCHMARKS.md`
 - `OFFLINE_AI_OPERATOR_GUIDE.md`
 - `offline-ai/`
+- `offline-ai/LOCAL_OPTIMIZATION_SUMMARY.md`
 - `scripts/Test-OfflineAIReadiness.ps1`
+- `scripts/Measure-OllamaModels.ps1`

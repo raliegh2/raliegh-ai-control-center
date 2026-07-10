@@ -66,13 +66,15 @@ Stretch model to test only after benchmarks: `qwen2.5-coder:7b`, with concurrenc
 
 | Setting | Recommendation |
 | --- | --- |
-| Context length | Start at 4096 tokens for daily use. Increase to 8192 only when memory and latency are acceptable. Avoid using advertised 32K/128K windows by default on this laptop. |
+| Context length | Start at 2048 tokens for daily use while the laptop is under memory pressure. Use 4096 only after `scripts/Measure-OllamaModels.ps1` passes. Avoid using advertised 32K/128K windows by default on this laptop. |
 | Concurrent models | 1 loaded model at a time. |
 | Parallel requests | 1. |
 | Retrieval chunking | 500-900 tokens per chunk with 80-120 token overlap. |
 | Retrieval top-k | 4-6 chunks by default. |
-| GPU use | Allow Ollama to offload automatically; expect partial GPU or CPU fallback when VRAM is already occupied. |
+| GPU use | Use Ollama's default GPU handling for the current 3B models because that matched the passing benchmark. If CUDA allocation errors return, free RAM/VRAM and then retry CPU mode (`num_gpu=0`) only for fallback tests. |
 | Storage guardrail | Keep total local model storage under 15 GB unless explicitly reviewed. |
+| Pre-run memory guardrail | Do not start a 3B+ model unless at least 4 GB system RAM is free. |
+| Pre-pull disk guardrail | Do not pull new models unless at least 5 GB disk space is free. |
 
 ## Assistant Components
 
@@ -95,3 +97,9 @@ The lightest maintainable setup is:
 ## Limitations
 
 Because Ollama is not currently available on PATH in this environment, the final installed-model decision must be confirmed after setup by running `scripts/Test-OfflineAIReadiness.ps1` and the benchmark checklist. The architectural recommendation is intentionally conservative so the first usable system is stable instead of impressive on paper and painful in practice.
+
+## Local Verification Update
+
+A later local verification found Ollama installed at `%LOCALAPPDATA%\Programs\Ollama\ollama.exe`, but not on PATH. Installed models were `llama3.1:8b`, `llama3.2:3b`, `qwen2.5-coder:7b`, `qwen3:4b`, and `qwen2.5:3b`.
+
+Early generation attempts failed under heavy desktop load because the machine had low free system RAM and about 2.1 GB free VRAM. After transient pressure eased, a short benchmark at `num_ctx=1024` and `num_predict=32` passed for `qwen2.5:3b`, `llama3.2:3b`, and `qwen3:4b`. The current local optimized default is `qwen2.5:3b`, with `llama3.2:3b` as the general fallback. C: had only about 220-245 MB free, so smaller fallback models could not be pulled safely.

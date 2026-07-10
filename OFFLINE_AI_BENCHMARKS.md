@@ -2,6 +2,20 @@
 
 Use this checklist after installing Ollama and pulling the recommended models. Record results before changing the default model.
 
+For repeatable measurements, run:
+
+```powershell
+.\scripts\Measure-OllamaModels.ps1
+```
+
+To test a specific installed subset:
+
+```powershell
+.\scripts\Measure-OllamaModels.ps1 -Models llama3.2:3b,qwen3:4b,qwen2.5-coder:7b
+```
+
+The script writes `offline-ai/local-benchmark-results.md` and unloads each model after each prompt with `keep_alive=0s`.
+
 ## Test Matrix
 
 | Area | Prompt | Model | Latency | RAM/VRAM | Quality notes | Pass |

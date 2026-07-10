@@ -67,6 +67,27 @@ ollama run qwen2.5-coder:1.5b
 
 5. Restart Ollama if it remains stuck.
 
+Before starting a 3B or larger model, aim for at least 4 GB free system RAM and 3 GB free VRAM. If Windows has less than that available, use the `lowMemoryFallback` profile after installing `llama3.2:1b`, or close applications first.
+
+Check free system memory:
+
+```powershell
+Get-CimInstance Win32_OperatingSystem | Select-Object FreePhysicalMemory,TotalVisibleMemorySize
+```
+
+Check free disk space before pulling models:
+
+```powershell
+Get-PSDrive -Name C
+```
+
+If disk space is critically low, do not pull new models. Review installed models and remove only models you intentionally no longer need:
+
+```powershell
+ollama list
+ollama rm model-name:tag
+```
+
 ## Recover From Slow Responses
 
 - Reduce context to 2048-4096.

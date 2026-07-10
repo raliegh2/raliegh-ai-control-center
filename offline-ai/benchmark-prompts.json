@@ -1,0 +1,25 @@
+{
+  "description": "Short verification prompts for constrained local Ollama benchmarking.",
+  "prompts": [
+    {
+      "id": "coding-debug",
+      "area": "Coding",
+      "prompt": "You are helping with an authorized local project. Explain this Python error and give the smallest safe fix:\n\nTraceback (most recent call last):\n  File \"app.py\", line 14, in <module>\n    print(total / count)\nZeroDivisionError: division by zero\n\nAnswer with cause, fix, and one tiny code snippet."
+    },
+    {
+      "id": "cyber-defense",
+      "area": "Cybersecurity",
+      "prompt": "For an authorized defensive lab, interpret this Nmap result and list safe next steps only:\n\n22/tcp open ssh OpenSSH 9.6\n80/tcp open http nginx 1.24\n443/tcp open https nginx 1.24\n\nKeep it defensive and concise."
+    },
+    {
+      "id": "school-summary",
+      "area": "Schoolwork",
+      "prompt": "Summarize these networking notes into revision bullets:\n\nDNS maps names to IP addresses. DHCP leases IP settings to clients. NAT lets private hosts share one public IP. Firewalls filter traffic based on policy.\n\nInclude one possible exam question."
+    },
+    {
+      "id": "trading-research",
+      "area": "Trading research",
+      "prompt": "Review this backtest note for research only, not live trading advice:\n\nGBPUSD strategy: 120 trades, profit factor 1.18, max drawdown 8.5%, average R 0.12, strongest month +4.1%, weakest month -3.7%.\n\nSeparate factual observations from cautions."
+    }
+  ]
+}
